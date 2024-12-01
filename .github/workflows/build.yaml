@@ -1,0 +1,33 @@
+name: Run Dagger and Upload Output
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Dagger
+        uses: dagger/dagger-for-github@v6
+        with:
+          version: "latest"
+          verb: call
+          args: run export --path ./out
+          cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Print results
+        run: |
+          for file in $(find ./out -type f); do
+            echo "Contents of $file:"
+            cat $file
+          done
