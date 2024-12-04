@@ -1,0 +1,15 @@
+{
+  "name" : "cpp",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "d2b6159679a36b233b0c31bdf027a57c2bf480db",
+  "dependencies" : [ {
+    "name" : "vcpkg-cmake-config",
+    "version>=" : "2024-05-23"
+  }, {
+    "name" : "vcpkg-cmake",
+    "version>=" : "2024-04-23"
+  }, {
+    "name" : "nlohmann-json",
+    "version>=" : "3.11.3#1"
+  } ]
+}

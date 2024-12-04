@@ -20,14 +20,21 @@ jobs:
         with:
           version: "latest"
           verb: call
-          args: run export --path ./out
+          args: all export --path ./
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Print results
         run: |
-          for file in $(find ./out -type f); do
-            echo "Contents of $file:"
-            cat $file
-          done
+          if [ -d "./outputs" ]; then
+            for dir in $(ls ./outputs); do
+              echo "Directory: $dir"
+              for file in $(ls ./outputs/$dir); do
+                echo "  File: $file"
+                cat "./outputs/$dir/$file"
+              done
+            done
+          else
+            echo "No output directory found."
+          fi

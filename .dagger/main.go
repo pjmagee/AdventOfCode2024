@@ -4,66 +4,117 @@ import (
 	"context"
 	"dagger/advent-of-code-2024/internal/dagger"
 	"fmt"
-	"io"
-	"net/http"
-	"net/url"
-	path2 "path"
 )
 
 type AdventOfCode2024 struct {
+}
+
+type Language = string
+
+const (
+	// CSharp is the C# language
+	CSharp Language = "cs"
+	// Cpp is the C++ language
+	Cpp Language = "cpp"
+	// Go is the Go language
+	Go Language = "go"
+	// Python is the Python language
+	Python Language = "py"
+)
+
+func (m *AdventOfCode2024) All(
+	ctx context.Context,
+	// +defaultPath="/"
+	git *dagger.Directory,
+) *dagger.Directory {
+
+	inputs, _ := git.Directory("inputs").Entries(ctx)
+
+	languages := []Language{Go, Cpp, CSharp, Python}
+	collection := dag.Directory()
+
+	for _, lang := range languages {
+		for idx, _ := range inputs {
+			ctr := m.Run(ctx, git, lang, idx+1)
+			if ctr != nil {
+				result, err := ctr.Sync(ctx)
+				if err == nil {
+					collection = collection.
+						WithDirectory(fmt.Sprintf("/outputs/%s", lang), result.Directory("/out"))
+				}
+			}
+		}
+	}
+
+	return collection
 }
 
 func (m *AdventOfCode2024) Run(
 	ctx context.Context,
 	// +defaultPath="/"
 	git *dagger.Directory,
-	// +optional
-	secret *dagger.Secret,
-	// +optional
-	day *int,
-) (*dagger.Directory, error) {
-
-	var token = ""
-
-	if secret != nil {
-		text, _ := secret.Plaintext(ctx)
-		token = text
+	lang Language,
+	day int,
+) *dagger.Container {
+	switch lang {
+	case Go:
+		return m.Go(git).With(func(c *dagger.Container) *dagger.Container {
+			cmd := fmt.Sprintf("go run main.go %[1]d < /inputs/%[1]d > /out/%[1]d", day)
+			return c.WithExec([]string{"sh", "-c", cmd})
+		})
+	case Cpp:
+		return m.Cpp(git).With(func(c *dagger.Container) *dagger.Container {
+			cmd := fmt.Sprintf("/src/build/advent %[1]d < /inputs/%[1]d > /out/%[1]d", day)
+			return c.WithExec([]string{"sh", "-c", cmd})
+		})
+	case CSharp:
+		return m.CSharp(git).With(func(c *dagger.Container) *dagger.Container {
+			cmd := fmt.Sprintf("/src/build/Advent %[1]d < /inputs/%[1]d > /out/%[1]d", day)
+			return c.WithExec([]string{"sh", "-c", cmd})
+		})
+	default:
+		return nil
 	}
-
-	ctr := dag.Container().
-		From("golang:latest").
-		WithDirectory("/advent", git.Directory("/advent")).
-		WithWorkdir("/advent").
-		WithExec([]string{"mkdir", "-p", "/out"})
-
-	days, _ := ctr.Directory("/advent/days").Entries(ctx)
-
-	if day != nil {
-		cmd := "go run main.go " + fmt.Sprintf("%d", *day) + " > " + fmt.Sprintf("\"/out/%d.json\"", *day)
-		ctr = ctr.WithExec([]string{"sh", "-c", cmd})
-	} else {
-		for idx, path := range days {
-			if secret != nil {
-				input, _ := getInput(token, idx+1)
-				ctr = ctr.WithNewFile(path2.Join(path, "INPUT"), input)
-			}
-
-			cmd := "go run main.go " + fmt.Sprintf("%d", idx+1) + " > " + fmt.Sprintf("\"/out/%d.json\"", idx+1)
-
-			ctr = ctr.WithExec([]string{"sh", "-c", cmd})
-		}
-	}
-
-	return ctr.Directory("/out"), nil
 }
 
-func getInput(session string, day int) (string, error) {
+func (m *AdventOfCode2024) CSharp(git *dagger.Directory) *dagger.Container {
+	return dag.Container().
+		From("mcr.microsoft.com/dotnet/sdk:9.0").
+		WithDirectory("/src", git.Directory("/src/cs")).
+		WithDirectory("/inputs", git.Directory("/inputs")).
+		WithWorkdir("/src").
+		WithExec([]string{"sh", "-c", "dotnet build ./AdventOfCode2024 -o build"}).
+		WithExec([]string{"mkdir", "-p", "/out"})
+}
 
-	input, _ := url.Parse("https://adventofcode.com/2024/day/" + string(rune(day)) + "/input")
-	request, _ := http.NewRequest(http.MethodGet, input.String(), nil)
-	request.AddCookie(&http.Cookie{Name: "session", Value: session})
-	resp, _ := http.DefaultClient.Do(request)
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	return string(body), nil
+func (m *AdventOfCode2024) Cpp(git *dagger.Directory) *dagger.Container {
+
+	build := dag.Container().
+		From("debian:bullseye-slim").
+		WithExec([]string{"sh", "-c", "apt-get update && apt-get install -y build-essential git gpg wget curl zip unzip tar pkg-config ninja-build"}).
+		WithExec([]string{"sh", "-c", "wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | gpg --dearmor -o /usr/share/keyrings/kitware-archive-keyring.gpg"}).
+		WithExec([]string{"sh", "-c", `echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main' > /etc/apt/sources.list.d/kitware.list`}).
+		WithExec([]string{"sh", "-c", "apt-get update && apt-get install -y cmake"}).
+		WithExec([]string{"sh", "-c", "git clone https://github.com/microsoft/vcpkg.git /opt/vcpkg"}).
+		WithExec([]string{"sh", "-c", "/opt/vcpkg/bootstrap-vcpkg.sh"}).
+		WithDirectory("/src", git.Directory("/src/cpp")).
+		WithWorkdir("/src").
+		WithDirectory("/inputs", git.Directory("/inputs")).
+		WithExec([]string{"sh", "-c", `cmake -Bbuild -S. -G Ninja \
+		-DCMAKE_C_COMPILER=/usr/bin/gcc \
+		-DCMAKE_CXX_COMPILER=/usr/bin/g++ \
+		-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
+		-DCMAKE_MAKE_PROGRAM=ninja && cmake --build build`}).
+		WithExec([]string{"mkdir", "-p", "/out"})
+
+	return build
+}
+
+func (m *AdventOfCode2024) Go(git *dagger.Directory) *dagger.Container {
+	return dag.Container().
+		From("golang:latest").
+		WithExec([]string{"mkdir", "-p", "/out"}).
+		WithDirectory("/src", git.Directory("/src/go")).
+		WithDirectory("/inputs", git.Directory("/inputs")).
+		WithWorkdir("/src")
 }

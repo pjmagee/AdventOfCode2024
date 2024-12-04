@@ -1,12 +1,10 @@
-package d1
+package days
 
 import (
-	"advent/register"
 	"context"
 	"encoding/json"
 	"fmt"
 	"math"
-	"os"
 	"sort"
 	"strings"
 )
@@ -16,14 +14,7 @@ type Day1 struct {
 	SimilarityScore int `json:"similarity_score"`
 }
 
-func init() {
-	register.Register(&Day1{})
-}
-
-func (d *Day1) Run(ctx context.Context) (string, error) {
-
-	bytes, _ := os.ReadFile("days/d1/INPUT")
-	input := string(bytes)
+func (d *Day1) Execute(ctx context.Context, input string) (string, error) {
 
 	p1 := &PartOneQuestion{InputData: input}
 	p1.Solve()
