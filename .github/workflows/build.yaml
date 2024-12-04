@@ -10,31 +10,34 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Set up Dagger
+      - name: Run all solutions
         uses: dagger/dagger-for-github@v6
         with:
           version: "latest"
           verb: call
-          args: all export --path ./
+          args: --session=env:AOC_TOKEN all directory --path /outputs export --path ./outputs
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
         env:
+          AOC_TOKEN: ${{ secrets.AOC_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Print results
+      - name: Print outputs
         run: |
-          if [ -d "./outputs" ]; then
-            for dir in $(ls ./outputs); do
-              echo "Directory: $dir"
-              for file in $(ls ./outputs/$dir); do
-                echo "  File: $file"
-                cat "./outputs/$dir/$file"
-              done
-            done
-          else
-            echo "No output directory found."
-          fi
+          BASE_DIR="./outputs"
+          find "$BASE_DIR" -type f | while read -r FILE_PATH; do
+            FOLDER_NAME="$(dirname "$FILE_PATH")"
+            FILE_NAME="$(basename "$FILE_PATH")"
+
+            echo "Folder Name: $FOLDER_NAME"
+            echo "File Name: $FILE_NAME"
+            echo "Contents:"
+            # Safely display contents by prefixing each line
+            sed 's/^/    /' "$FILE_PATH"
+            echo 
+            echo "---------------------------------"
+          done

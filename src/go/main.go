@@ -12,15 +12,15 @@ import (
 
 func main() {
 
+	number, _ := strconv.Atoi(os.Args[1])
+
 	data, err := io.ReadAll(os.Stdin)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading from stdin: %v\n", err)
+		fmt.Fprintln(os.Stderr, "Error reading stdin:", err)
 		os.Exit(1)
 	}
 
 	input := string(data)
-
-	number, _ := strconv.Atoi(os.Args[1])
 
 	for _, day := range days.Days {
 		// get name of type and check if ends in day

@@ -4,12 +4,24 @@ import (
 	"context"
 	"dagger/advent-of-code-2024/internal/dagger"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 )
 
 type AdventOfCode2024 struct {
+	Session *dagger.Secret
 }
 
-type Language = string
+func New(
+	session *dagger.Secret,
+) *AdventOfCode2024 {
+	return &AdventOfCode2024{
+		Session: session,
+	}
+}
+
+type Language string
 
 const (
 	// CSharp is the C# language
@@ -24,11 +36,12 @@ const (
 
 func (m *AdventOfCode2024) All(
 	ctx context.Context,
-	// +defaultPath="/"
+// +defaultPath="/"
+// +ignore=[".git", "**/inputs", "**/outputs", "**/secrets", "**/bin", "**/obj"]
 	git *dagger.Directory,
-) *dagger.Directory {
+) *dagger.Container {
 
-	inputs, _ := git.Directory("inputs").Entries(ctx)
+	inputs := make([]int, 4)
 
 	languages := []Language{Go, Cpp, CSharp, Python}
 	collection := dag.Directory()
@@ -46,16 +59,51 @@ func (m *AdventOfCode2024) All(
 		}
 	}
 
-	return collection
+	return dag.Container().
+		From("alpine").
+		WithDirectory(".", collection)
+}
+
+func (m *AdventOfCode2024) GetInput(
+	ctx context.Context,
+// The input data for the day of the AoC to download
+	day int) *dagger.File {
+
+	token, _ := m.Session.Plaintext(ctx)
+
+	cookie := &http.Cookie{
+		Name:  "session",
+		Value: token,
+	}
+
+	inputUrl, _ := url.Parse(fmt.Sprintf("https://adventofcode.com/2024/day/%d/input", day))
+	inputRequest, _ := http.NewRequest("GET", inputUrl.String(), nil)
+	inputRequest.AddCookie(cookie)
+	inputResp, _ := http.DefaultClient.Do(inputRequest)
+	input, _ := io.ReadAll(inputResp.Body)
+
+	inbox := dag.Directory()
+	inbox = inbox.WithNewFile(fmt.Sprintf("%d", day), string(input))
+	return inbox.File(fmt.Sprintf("%d", day))
 }
 
 func (m *AdventOfCode2024) Run(
 	ctx context.Context,
-	// +defaultPath="/"
+// +defaultPath="/"
+// +ignore=[".git", "**/outputs", "**/secrets"]
 	git *dagger.Directory,
 	lang Language,
 	day int,
+
 ) *dagger.Container {
+
+	inputs, _ := git.Glob(ctx, fmt.Sprintf("/inputs/%d", day))
+
+	if len(inputs) != 1 {
+		fmt.Printf("downloading input %d from Advent of Code\n", day)
+		git = git.WithFile(fmt.Sprintf("inputs/%d", day), m.GetInput(ctx, day))
+	}
+
 	switch lang {
 	case Go:
 		return m.Go(git).With(func(c *dagger.Container) *dagger.Container {

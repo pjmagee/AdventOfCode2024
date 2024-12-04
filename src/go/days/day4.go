@@ -23,9 +23,17 @@ func (d *Day4) TextToGrid(text string) [][]rune {
 
 	lines := strings.Split(text, "\n")
 
+	data := make([]string, 0)
+
+	for _, line := range lines {
+		if line != "" {
+			data = append(data, line)
+		}
+	}
+
 	grid := make([][]rune, len(lines))
 
-	for i, line := range lines {
+	for i, line := range data {
 		grid[i] = []rune(strings.ReplaceAll(line, " ", ""))
 	}
 
@@ -40,7 +48,7 @@ func searchWord(grid [][]rune, word string, row, col, dir int) (bool, string) {
 		newRow := row + i*directions[dir][0]
 		newCol := col + i*directions[dir][1]
 
-		if newRow < 0 || newRow >= len(grid) || newCol < 0 || newCol >= len(grid[0]) {
+		if newRow < 0 || newRow >= len(grid) || newCol < 0 || newCol >= len(grid[newRow]) {
 			return false, ""
 		}
 
@@ -60,9 +68,7 @@ func countWordMatches(grid [][]rune, word string) int {
 
 	for row := 0; row < len(grid); row++ {
 		for col := 0; col < len(grid[0]); col++ {
-
 			for dir := 0; dir < len(directions); dir++ {
-
 				if found, key := searchWord(grid, word, row, col, dir); found {
 					if !uniqueMatches[key] {
 						uniqueMatches[key] = true
@@ -76,7 +82,6 @@ func countWordMatches(grid [][]rune, word string) int {
 }
 
 func findXMas(grid [][]rune) int {
-
 	// Define directions for the X-shape arms
 	dx := []int{1, 1, -1, -1}
 	dy := []int{1, -1, 1, -1}
@@ -85,18 +90,31 @@ func findXMas(grid [][]rune) int {
 
 	// Iterate through the grid, avoiding edges
 	for y := 1; y < len(grid)-1; y++ {
-		for x := 1; x < len(grid[0])-1; x++ {
+		for x := 1; x < len(grid[y])-1; x++ {
 			// The center of the X must be 'A'
 			if grid[y][x] != 'A' {
 				continue
 			}
 
 			// Check the four diagonal directions
-			nxts := []rune{
-				grid[y+dy[0]][x+dx[0]],
-				grid[y+dy[1]][x+dx[1]],
-				grid[y+dy[2]][x+dx[2]],
-				grid[y+dy[3]][x+dx[3]],
+			nxts := []rune{}
+			valid := true
+			for i := 0; i < 4; i++ {
+				ny := y + dy[i]
+				nx := x + dx[i]
+
+				// Bounds check
+				if ny < 0 || ny >= len(grid) || nx < 0 || nx >= len(grid[ny]) {
+					valid = false
+					break
+				}
+
+				nxts = append(nxts, grid[ny][nx])
+			}
+
+			// Skip invalid configurations
+			if !valid {
+				continue
 			}
 
 			// Ensure all surrounding characters are 'M' or 'S' and satisfy the X conditions

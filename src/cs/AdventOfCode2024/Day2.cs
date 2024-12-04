@@ -2,7 +2,7 @@ public class Day2 : IDay
 {
     public string Execute(string input)
     {
-        var reports = input.Split('\n');
+        var reports = input.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
         int safeReports = 0;
 

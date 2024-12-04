@@ -16,7 +16,7 @@ public class Day1 : IDay
 
     public string Execute(string input)
     {
-        var lines = input.Split("\n");
+        var lines = input.Split("\n", StringSplitOptions.RemoveEmptyEntries);
 
         List<int> left = new List<int>();
         List<int> right = new List<int>();

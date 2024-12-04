@@ -43,7 +43,16 @@ func (d *Day2) IsSafe(levels []int) bool {
 
 func (d *Day2) Execute(ctx context.Context, input string) (string, error) {
 
-	reports := strings.Split(input, "\n")
+	lines := strings.Split(input, "\n")
+
+	reports := make([]string, 0)
+
+	for _, line := range lines {
+		if strings.TrimSpace(line) != "" {
+			reports = append(reports, line)
+		}
+	}
+
 	results := make([]bool, len(reports))
 
 	for reportIdx, report := range reports {
