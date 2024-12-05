@@ -8,7 +8,7 @@ if (Console.IsInputRedirected)
     int day = int.Parse(args[0]);
     string input = Console.In.ReadToEnd();
 
-    Dictionary<int, IDay> days = new Dictionary<int, IDay>
+    Dictionary<int, IDay> days = new()
     {
         { 1, new Day1() },
         { 2, new Day2() },

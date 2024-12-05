@@ -14,16 +14,16 @@ find_package(nlohmann_json CONFIG REQUIRED)
 set(nlohmann-json_IMPLICIT_CONVERSIONS OFF)
 
 add_executable(advent
+        main.cpp
         Day.h
         DayFactory.h
-        DayFactory.cpp
         Day1.h
-        Day1.cpp
         Day2.h
-        Day2.cpp
         Day3.h
+        Day1.cpp
+        Day2.cpp
         Day3.cpp
-        main.cpp
+        DayFactory.cpp
 )
 
 if (MINGW)

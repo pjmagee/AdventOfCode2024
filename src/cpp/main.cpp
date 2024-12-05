@@ -14,12 +14,21 @@ int main(int argc, char* argv[] ) {
     buffer << std::cin.rdbuf();
     std::string input = buffer.str();
 
-    const std::string dayNumber = argv[1];
+    try
+    {
+        const int number = std::stoi(argv[1]);
 
-    if (const std::unique_ptr<Day> day = DayFactory::createDay(dayNumber); day != nullptr) {
-        std::cout << day->execute(input) << std::endl;
-    } else {
+        if (const std::unique_ptr<Day> day = DayFactory::createDay(number); day != nullptr) {
+            std::cout << day->execute(input) << std::endl;
+        } else {
+            std::cout << "Invalid day number" << std::endl;
+            return 1;
+        }
+    }
+    catch (const std::exception& e)
+    {
         std::cout << "Invalid day number" << std::endl;
+        return 1;
     }
 
     return 0;

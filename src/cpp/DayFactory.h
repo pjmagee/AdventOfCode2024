@@ -7,7 +7,7 @@
 
 class DayFactory {
 public:
-    static std::unique_ptr<Day> createDay(const std::string& arg);
+    static std::unique_ptr<Day> createDay(int arg);
 };
 
 #endif // DAYFACTORY_H

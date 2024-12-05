@@ -14,6 +14,7 @@ type AdventOfCode2024 struct {
 }
 
 func New(
+	// +optional
 	session *dagger.Secret,
 ) *AdventOfCode2024 {
 	return &AdventOfCode2024{
@@ -23,6 +24,7 @@ func New(
 
 type Language string
 
+// Supported languages for the Advent of Code 2024
 const (
 	// CSharp is the C# language
 	CSharp Language = "cs"
@@ -34,10 +36,10 @@ const (
 	Python Language = "py"
 )
 
+// Runs all the languages and days of the Advent of Code 2024
 func (m *AdventOfCode2024) All(
-	ctx context.Context,
-// +defaultPath="/"
-// +ignore=[".git", "**/inputs", "**/outputs", "**/secrets", "**/bin", "**/obj"]
+	// +defaultPath="/"
+	// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
 	git *dagger.Directory,
 ) *dagger.Container {
 
@@ -48,9 +50,9 @@ func (m *AdventOfCode2024) All(
 
 	for _, lang := range languages {
 		for idx, _ := range inputs {
-			ctr := m.Run(ctx, git, lang, idx+1)
+			ctr := m.Run(git, lang, idx+1)
 			if ctr != nil {
-				result, err := ctr.Sync(ctx)
+				result, err := ctr.Sync(context.Background())
 				if err == nil {
 					collection = collection.
 						WithDirectory(fmt.Sprintf("/outputs/%s", lang), result.Directory("/out"))
@@ -64,12 +66,12 @@ func (m *AdventOfCode2024) All(
 		WithDirectory(".", collection)
 }
 
+// downloads the input data for the day of the Advent of Code 2024
 func (m *AdventOfCode2024) GetInput(
-	ctx context.Context,
-// The input data for the day of the AoC to download
+	// The input data for the day of the AoC to download
 	day int) *dagger.File {
 
-	token, _ := m.Session.Plaintext(ctx)
+	token, _ := m.Session.Plaintext(context.Background())
 
 	cookie := &http.Cookie{
 		Name:  "session",
@@ -87,21 +89,21 @@ func (m *AdventOfCode2024) GetInput(
 	return inbox.File(fmt.Sprintf("%d", day))
 }
 
+// Runs the solution for a given day and language of the Advent of Code 2024
 func (m *AdventOfCode2024) Run(
-	ctx context.Context,
-// +defaultPath="/"
-// +ignore=[".git", "**/outputs", "**/secrets"]
+	// +defaultPath="/"
+	// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
 	git *dagger.Directory,
 	lang Language,
 	day int,
 
 ) *dagger.Container {
 
-	inputs, _ := git.Glob(ctx, fmt.Sprintf("/inputs/%d", day))
+	inputs, _ := git.Glob(context.Background(), fmt.Sprintf("/inputs/%d", day))
 
 	if len(inputs) != 1 {
 		fmt.Printf("downloading input %d from Advent of Code\n", day)
-		git = git.WithFile(fmt.Sprintf("inputs/%d", day), m.GetInput(ctx, day))
+		git = git.WithFile(fmt.Sprintf("inputs/%d", day), m.GetInput(day))
 	}
 
 	switch lang {
@@ -125,9 +127,10 @@ func (m *AdventOfCode2024) Run(
 	}
 }
 
+// Returns the container to build the C# solution
 func (m *AdventOfCode2024) CSharp(git *dagger.Directory) *dagger.Container {
 	return dag.Container().
-		From("mcr.microsoft.com/dotnet/sdk:9.0").
+		From("mcr.microsoft.com/dotnet/sdk:9.0-alpine").
 		WithDirectory("/src", git.Directory("/src/cs")).
 		WithDirectory("/inputs", git.Directory("/inputs")).
 		WithWorkdir("/src").
@@ -135,29 +138,38 @@ func (m *AdventOfCode2024) CSharp(git *dagger.Directory) *dagger.Container {
 		WithExec([]string{"mkdir", "-p", "/out"})
 }
 
-func (m *AdventOfCode2024) Cpp(git *dagger.Directory) *dagger.Container {
-
-	build := dag.Container().
+func (m *AdventOfCode2024) cppBaseImage() *dagger.Container {
+	return dag.Container().
 		From("debian:bullseye-slim").
 		WithExec([]string{"sh", "-c", "apt-get update && apt-get install -y build-essential git gpg wget curl zip unzip tar pkg-config ninja-build"}).
 		WithExec([]string{"sh", "-c", "wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | gpg --dearmor -o /usr/share/keyrings/kitware-archive-keyring.gpg"}).
 		WithExec([]string{"sh", "-c", `echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main' > /etc/apt/sources.list.d/kitware.list`}).
 		WithExec([]string{"sh", "-c", "apt-get update && apt-get install -y cmake"}).
 		WithExec([]string{"sh", "-c", "git clone https://github.com/microsoft/vcpkg.git /opt/vcpkg"}).
-		WithExec([]string{"sh", "-c", "/opt/vcpkg/bootstrap-vcpkg.sh"}).
-		WithDirectory("/src", git.Directory("/src/cpp")).
-		WithWorkdir("/src").
-		WithDirectory("/inputs", git.Directory("/inputs")).
-		WithExec([]string{"sh", "-c", `cmake -Bbuild -S. -G Ninja \
+		WithExec([]string{"sh", "-c", "/opt/vcpkg/bootstrap-vcpkg.sh"})
+}
+
+// Returns the container to build the C++ solution
+func (m *AdventOfCode2024) Cpp(git *dagger.Directory) *dagger.Container {
+
+	cmake := `cmake -Bbuild -S. -G Ninja \
 		-DCMAKE_C_COMPILER=/usr/bin/gcc \
 		-DCMAKE_CXX_COMPILER=/usr/bin/g++ \
 		-DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
-		-DCMAKE_MAKE_PROGRAM=ninja && cmake --build build`}).
-		WithExec([]string{"mkdir", "-p", "/out"})
+		-DCMAKE_MAKE_PROGRAM=ninja && cmake --build build`
+
+	build := m.
+		cppBaseImage().
+		WithExec([]string{"mkdir", "-p", "/out"}).
+		WithWorkdir("/src").
+		WithDirectory("/src", git.Directory("/src/cpp")).
+		WithDirectory("/inputs", git.Directory("/inputs")).
+		WithExec([]string{"sh", "-c", cmake})
 
 	return build
 }
 
+// Returns the container to build the Go solution
 func (m *AdventOfCode2024) Go(git *dagger.Directory) *dagger.Container {
 	return dag.Container().
 		From("golang:latest").

@@ -4,22 +4,17 @@
 #include "Day2.h"
 #include "Day3.h"
 
-std::unique_ptr<Day> DayFactory::createDay(const std::string& arg)
+std::unique_ptr<Day> DayFactory::createDay(const int arg)
 {
-    if (arg == "1")
+    switch (arg)
     {
+    case 1:
         return std::make_unique<Day1>();
-    }
-
-    if (arg == "2")
-    {
+    case 2:
         return std::make_unique<Day2>();
-    }
-
-    if (arg == "3")
-    {
+    case 3:
         return std::make_unique<Day3>();
+    default:
+        return nullptr;
     }
-
-    return nullptr;
 }
