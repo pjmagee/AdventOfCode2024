@@ -26,6 +26,67 @@ In compliance with the guidelines on the Advent of Code website, **input data is
 
 ---
 
+Here’s a revised version of your text with improved structure, clarity, and formatting:
+
+---
+
+## 🛠 Developing Solutions
+
+To ensure consistency and streamline the CI/CD pipeline, solutions should adhere to a standardized structure and execution process.
+
+### General Rules
+
+1. **Main File:** Each language directory must include a `main` file to run the solution for a specific day.
+2. **Function Signature:** Solutions must be implemented as a function that:
+  - Accepts the input data as a string.
+  - Returns the result as a string.
+3. **Input and Output:** Solutions should:
+  - Read input data from `stdin`.
+  - Write the output to `stdout`.
+4. **Command Line Argument:** The challenge day should be provided as a command-line argument.
+
+### Command Syntax
+
+#### Bash
+```bash
+[command] [day] < [input file]
+```
+
+#### PowerShell
+```powershell
+Get-Content -Path input.txt | [command] [day]
+```
+
+### Example Commands for Different Languages
+
+- **Go:**
+  ```bash
+  go run main.go 1 < input.txt
+  ```
+
+- **Python:**
+  ```bash
+  python main.py 1 < input.txt
+  ```
+
+- **C# (.NET):**
+  ```bash
+  dotnet run --project src/csharp -- 1 < input.txt
+  ```
+
+- **CMake:**
+  ```bash
+  cmake --build build --target run -- -d 1 < input.txt
+  ```
+
+---
+
+This version is more concise, organized, and easier to follow while maintaining all the essential details.
+
+## 🌤️ Running Solutions in the Cloud
+
+Solutions can be run in the cloud using the **Dagger Engine**. Refer to GitHub Actions workflows in the `.github/workflows` directory for examples of how to run solutions in the cloud.
+
 ## 🛠️ Running Solutions Locally
 
 ### 1. Using Dagger
@@ -60,7 +121,7 @@ cd src/go
 go run main.go DAY < INPUT.txt
 ```
 
-For other languages, use the appropriate build and execution commands as required for the language (e.g., Python’s `python3`, Rust’s `cargo`, etc.).
+For other languages, use the appropriate build and execution commands as required for the language.
 
 ---
 

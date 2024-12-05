@@ -4,6 +4,8 @@ namespace AdventOfCode2024;
 
 public partial class Day3 : IDay
 {
+    public int Day => 3;
+
     public string Execute(string input)
     {
         var regex = InstructionsRegex();

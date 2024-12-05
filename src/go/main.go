@@ -29,6 +29,11 @@ func main() {
 		if strings.HasSuffix(structType, fmt.Sprintf("%d", number)) {
 			output, _ := day.Execute(context.Background(), input)
 			fmt.Print(output)
+			os.Exit(0)
 		}
 	}
+
+	fmt.Printf("Day %d not found\n", number)
+
+	os.Exit(-1)
 }

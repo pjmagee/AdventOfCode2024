@@ -1,5 +1,7 @@
 public class Day2 : IDay
 {
+    public int Day => 2;
+
     public string Execute(string input)
     {
         var reports = input.Split('\n', StringSplitOptions.RemoveEmptyEntries);

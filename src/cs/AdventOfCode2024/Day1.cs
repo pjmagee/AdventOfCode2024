@@ -5,6 +5,8 @@ namespace AdventOfCode2024;
 
 public class Day1 : IDay
 {
+    public int Day => 1;
+
     class Response
     {
         [JsonPropertyName("total_distance")]
