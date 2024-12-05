@@ -4,6 +4,7 @@ import (
 	"context"
 	"dagger/advent-of-code-2024/internal/dagger"
 	"fmt"
+	"github.com/PuerkitoBio/goquery"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,7 +15,7 @@ type AdventOfCode2024 struct {
 }
 
 func New(
-	// +optional
+// +optional
 	session *dagger.Secret,
 ) *AdventOfCode2024 {
 	return &AdventOfCode2024{
@@ -38,19 +39,28 @@ const (
 
 // Runs all the languages and days of the Advent of Code 2024
 func (m *AdventOfCode2024) All(
-	// +defaultPath="/"
-	// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
+// +defaultPath="/"
+// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
 	git *dagger.Directory,
+// +optional
+// +default=[]
+	days []int,
 ) *dagger.Container {
 
-	inputs := make([]int, 4)
+	if len(days) == 0 {
+		n := m.GetDays()
+		days = make([]int, n)
+		for i := 0; i < n; i++ {
+			days[i] = i + 1
+		}
+	}
 
 	languages := []Language{Go, Cpp, CSharp, Python}
 	collection := dag.Directory()
 
 	for _, lang := range languages {
-		for idx, _ := range inputs {
-			ctr := m.Run(git, lang, idx+1)
+		for _, day := range days {
+			ctr := m.Run(git, lang, day)
 			if ctr != nil {
 				result, err := ctr.Sync(context.Background())
 				if err == nil {
@@ -66,9 +76,34 @@ func (m *AdventOfCode2024) All(
 		WithDirectory(".", collection)
 }
 
+func (m *AdventOfCode2024) GetDays() int {
+
+	token, _ := m.Session.Plaintext(context.Background())
+	cookie := &http.Cookie{
+		Name:  "session",
+		Value: token,
+	}
+
+	inputRequest, _ := http.NewRequest("GET", "https://adventofcode.com/2024/", nil)
+	inputRequest.AddCookie(cookie)
+	inputResp, _ := http.DefaultClient.Do(inputRequest)
+
+	doc, _ := goquery.NewDocumentFromReader(inputResp.Body)
+
+	days := 0
+
+	doc.Find("a[href^='/2024/day']").Each(func(i int, s *goquery.Selection) {
+		days++
+	})
+
+	fmt.Printf("Found %d days\n", days)
+
+	return days
+}
+
 // downloads the input data for the day of the Advent of Code 2024
 func (m *AdventOfCode2024) GetInput(
-	// The input data for the day of the AoC to download
+// The input data for the day of the AoC to download
 	day int) *dagger.File {
 
 	token, _ := m.Session.Plaintext(context.Background())
@@ -91,8 +126,8 @@ func (m *AdventOfCode2024) GetInput(
 
 // Runs the solution for a given day and language of the Advent of Code 2024
 func (m *AdventOfCode2024) Run(
-	// +defaultPath="/"
-	// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
+// +defaultPath="/"
+// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
 	git *dagger.Directory,
 	lang Language,
 	day int,

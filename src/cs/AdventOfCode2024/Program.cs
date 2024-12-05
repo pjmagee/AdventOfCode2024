@@ -21,7 +21,6 @@ if (string.IsNullOrWhiteSpace(input))
     Console.Error.WriteLine("No input was piped to STDIN");
 }
 
-
 Dictionary<int, IDay> days = new();
 
 foreach(var type in typeof(IDay).Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IDay))))
