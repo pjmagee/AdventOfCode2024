@@ -33,16 +33,16 @@ public class Day5 : IDay
 
                     if (isCorrect)
                     {
-                        Console.WriteLine(c < s ?
-                            $"{currentPage} is correctly before {otherPage}" :
-                            $"{currentPage} is correctly after {otherPage}");
+                        // Console.WriteLine(c < s ?
+                        //     $"{currentPage} is correctly before {otherPage}" :
+                        //     $"{currentPage} is correctly after {otherPage}");
                     }
                     else
                     {
-                        Console.WriteLine(c < s ?
-                            $"{otherPage} is incorrectly after {currentPage}" :
-                            $"{otherPage} is incorrectly before {currentPage}"
-                        );
+                        // Console.WriteLine(c < s ?
+                        //     $"{otherPage} is incorrectly after {currentPage}" :
+                        //     $"{otherPage} is incorrectly before {currentPage}"
+                        // );
 
                         isUpdateCorrect = false;
                     }

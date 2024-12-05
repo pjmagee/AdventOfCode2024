@@ -25,8 +25,8 @@ Dictionary<int, IDay> days = new();
 
 foreach(var type in typeof(IDay).Assembly.GetTypes().Where(x => x.GetInterfaces().Contains(typeof(IDay))))
 {
-    IDay? implmentation = (IDay)Activator.CreateInstance(type)!;
-    days.Add(implmentation.Day, implmentation);
+    IDay? instance = (IDay)Activator.CreateInstance(type)!;
+    days.Add(instance.Day, instance);
 }
 
 Console.Out.WriteLine(days.ContainsKey(day) ? days[day].Execute(input) : "Day not found");
