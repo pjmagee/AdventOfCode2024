@@ -157,6 +157,11 @@ func (m *AdventOfCode2024) Run(
 			cmd := fmt.Sprintf("/src/build/Advent %[1]d < /inputs/%[1]d > /out/%[1]d", day)
 			return c.WithExec([]string{"sh", "-c", cmd})
 		})
+	case Python:
+		return m.Python(git).With(func(c *dagger.Container) *dagger.Container {
+			cmd := fmt.Sprintf("python3 main.py %[1]d < /inputs/%[1]d > /out/%[1]d", day)
+			return c.WithExec([]string{"sh", "-c", cmd})
+		})
 	default:
 		return nil
 	}
@@ -202,6 +207,15 @@ func (m *AdventOfCode2024) Cpp(git *dagger.Directory) *dagger.Container {
 		WithExec([]string{"sh", "-c", cmake})
 
 	return build
+}
+
+func (m *AdventOfCode2024) Python(git *dagger.Directory) *dagger.Container {
+	return dag.Container().
+		From("python:3.12.8-alpine").
+		WithDirectory("/src", git.Directory("/src/py")).
+		WithDirectory("/inputs", git.Directory("/inputs")).
+		WithWorkdir("/src").
+		WithExec([]string{"mkdir", "-p", "/out"})
 }
 
 // Returns the container to build the Go solution
