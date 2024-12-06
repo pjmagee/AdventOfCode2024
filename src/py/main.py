@@ -35,7 +35,7 @@ def main(day: int) -> None:
         print("No input data.")
         sys.exit(1)
     else:
-        input_data: str = sys.stdin.read()
+        input_data = sys.stdin.buffer.read().decode("utf-8").strip()
 
         days_modules = load_days()
 
@@ -43,9 +43,9 @@ def main(day: int) -> None:
             day_class: type[Day] = module[1]
             if day_class.__name__.endswith(str(day)):
                 day_instance = day_class()
-                if day_instance.process_input(input_data):
-                    print(day_instance.process_input(input_data))
-                    sys.exit(0)
+                result = day_instance.process_input(input_data)
+                print(result)
+                sys.exit(0)
 
         print(f"Day {day} not found.")
         sys.exit(1)
