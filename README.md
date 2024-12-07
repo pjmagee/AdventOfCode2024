@@ -76,6 +76,11 @@ Get-Content -Path input.txt | [command] [day]
   ```bash
   cmake --build build --target run -- -d 1 < input.txt
   ```
+  
+-- **Rust:**
+  ```bash
+  cargo run --bin rs -- 1 < input.txt
+  ```
 
 ---
 

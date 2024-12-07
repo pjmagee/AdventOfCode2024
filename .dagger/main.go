@@ -35,6 +35,8 @@ const (
 	Go Language = "go"
 	// Python is the Python language
 	Python Language = "py"
+	// Rust is the Rust language
+	Rust Language = "rs"
 )
 
 // Runs all the languages and days of the Advent of Code 2024
@@ -134,7 +136,7 @@ func (m *AdventOfCode2024) Run(
 
 ) *dagger.Container {
 
-	inputs, _ := git.Glob(context.Background(), fmt.Sprintf("/inputs/%d", day))
+	inputs, _ := git.Glob(context.Background(), fmt.Sprintf("inputs/%d", day))
 
 	if len(inputs) != 1 {
 		fmt.Printf("downloading input %d from Advent of Code\n", day)
@@ -160,6 +162,11 @@ func (m *AdventOfCode2024) Run(
 	case Python:
 		return m.Python(git).With(func(c *dagger.Container) *dagger.Container {
 			cmd := fmt.Sprintf("python3 main.py %[1]d < /inputs/%[1]d > /out/%[1]d", day)
+			return c.WithExec([]string{"sh", "-c", cmd})
+		})
+	case Rust:
+		return m.Rust(git).With(func(c *dagger.Container) *dagger.Container {
+			cmd := fmt.Sprintf("rs %[1]d < /inputs/%[1]d > /out/%[1]d", day)
 			return c.WithExec([]string{"sh", "-c", cmd})
 		})
 	default:
@@ -226,4 +233,17 @@ func (m *AdventOfCode2024) Go(git *dagger.Directory) *dagger.Container {
 		WithDirectory("/src", git.Directory("/src/go")).
 		WithDirectory("/inputs", git.Directory("/inputs")).
 		WithWorkdir("/src")
+}
+
+func (m *AdventOfCode2024) Rust(git *dagger.Directory) *dagger.Container {
+
+	return dag.Container().
+		From("rust:latest").
+		WithExec([]string{"mkdir", "-p", "/out"}).
+		WithWorkdir("/usr/src/advent").
+		WithDirectory("/inputs", git.Directory("/inputs")).
+		WithDirectory("/usr/src/advent", git.Directory("/src/rs"), dagger.ContainerWithDirectoryOpts{
+			Exclude: []string{"target/*"},
+		}).
+		WithExec([]string{"sh", "-c", "cargo install --path ."})
 }
