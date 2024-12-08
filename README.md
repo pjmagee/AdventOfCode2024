@@ -77,7 +77,7 @@ Get-Content -Path input.txt | [command] [day]
   cmake --build build --target run -- -d 1 < input.txt
   ```
   
--- **Rust:**
+- **Rust:**
   ```bash
   cargo run --bin rs -- 1 < input.txt
   ```
@@ -128,7 +128,7 @@ For other languages, use the appropriate build and execution commands as require
 
 ## 🤝 Contribution and Feedback
 
-This is primarily a personal project, but feedback and contributions are welcome!  
+This is a personal project, but feedback and contributions are welcome!  
 Feel free to fork the repository or submit issues and pull requests for improvements or alternative solutions.
 
 ---
@@ -137,6 +137,3 @@ Feel free to fork the repository or submit issues and pull requests for improvem
 
 This repository is licensed under the [GPL-3.0 license](LICENSE). Feel free to adapt or reuse the solutions, but don’t forget to credit appropriately!
 
----
-
-Enjoy Advent of Code 2024! 🎄✨

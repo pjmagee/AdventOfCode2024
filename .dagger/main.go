@@ -15,7 +15,7 @@ type AdventOfCode2024 struct {
 }
 
 func New(
-// +optional
+	// +optional
 	session *dagger.Secret,
 ) *AdventOfCode2024 {
 	return &AdventOfCode2024{
@@ -41,11 +41,11 @@ const (
 
 // Runs all the languages and days of the Advent of Code 2024
 func (m *AdventOfCode2024) All(
-// +defaultPath="/"
-// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
+	// +defaultPath="/"
+	// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
 	git *dagger.Directory,
-// +optional
-// +default=[]
+	// +optional
+	// +default=[]
 	days []int,
 ) *dagger.Container {
 
@@ -105,7 +105,7 @@ func (m *AdventOfCode2024) GetDays() int {
 
 // downloads the input data for the day of the Advent of Code 2024
 func (m *AdventOfCode2024) GetInput(
-// The input data for the day of the AoC to download
+	// The input data for the day of the AoC to download
 	day int) *dagger.File {
 
 	token, _ := m.Session.Plaintext(context.Background())
@@ -128,8 +128,8 @@ func (m *AdventOfCode2024) GetInput(
 
 // Runs the solution for a given day and language of the Advent of Code 2024
 func (m *AdventOfCode2024) Run(
-// +defaultPath="/"
-// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
+	// +defaultPath="/"
+	// +ignore=[".git", "**/outputs", "**/secrets", "**/bin", "**/obj", "**/cmake-build*/**"]
 	git *dagger.Directory,
 	lang Language,
 	day int,

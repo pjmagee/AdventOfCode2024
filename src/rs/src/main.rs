@@ -2,6 +2,8 @@
 mod day;
 use crate::day::Day;
 mod day7;
+mod day8;
+
 use atty;
 use std::io;
 use std::io::Read;
@@ -53,6 +55,7 @@ fn main() {
 
     let result = match day {
         7 => day7::Day7::process(&input),
+        8 => day8::Day8::process(&input),
         _ => format!("Day {} not implemented", day),
     };
 
